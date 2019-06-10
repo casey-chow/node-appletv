@@ -50,6 +50,6 @@
     "@types/uuid": "3.4.4",
     "rimraf": "2.6.3",
     "typedoc": "0.14.2",
-    "typescript": "3.3.3"
+    "typescript": "^3.3.3"
   }
 }
