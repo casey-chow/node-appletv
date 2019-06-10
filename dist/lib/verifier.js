@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const ed25519 = require("ed25519");
+const nacl = require("tweetnacl");
 const curve25519 = require("curve25519-n");
 const message_1 = require("./message");
 const tlv_1 = require("./util/tlv");
@@ -47,12 +47,12 @@ class Verifier {
                 throw new Error("Identifier mismatch");
             }
             let deviceInfo = Buffer.concat([sessionPublicKey, Buffer.from(identifier), verifyPublic]);
-            if (!ed25519.Verify(deviceInfo, signature, that.device.credentials.publicKey)) {
+            if (!nacl.sign.detached.verify(deviceInfo, signature, that.device.credentials.publicKey)) {
                 throw new Error("Signature verification failed");
             }
             let material = Buffer.concat([verifyPublic, Buffer.from(that.device.credentials.pairingId), sessionPublicKey]);
-            let keyPair = ed25519.MakeKeypair(that.device.credentials.encryptionKey);
-            let signed = ed25519.Sign(material, keyPair);
+            let keyPair = nacl.sign.keyPair.fromSecretKey(that.device.credentials.encryptionKey);
+            let signed = nacl.sign(material, keyPair.secretKey);
             let plainTLV = tlv_1.default.encode(tlv_1.default.Tag.Username, Buffer.from(that.device.credentials.pairingId), tlv_1.default.Tag.Signature, signed);
             let encryptedTLV = Buffer.concat(encryption_1.default.encryptAndSeal(plainTLV, null, Buffer.from('PV-Msg03'), encryptionKey));
             let outerTLV = tlv_1.default.encode(tlv_1.default.Tag.Sequence, 0x03, tlv_1.default.Tag.EncryptedData, encryptedTLV);

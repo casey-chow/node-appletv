@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { load } from 'protobufjs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import * as ed25519 from 'ed25519';
+import * as nacl from 'tweetnacl';
 
 import { AppleTV } from './appletv';
 import { Credentials } from './credentials';
@@ -118,8 +118,8 @@ export class Pairing {
         that.srp.checkM2(that.deviceProof);
 
         let seed = crypto.randomBytes(32);
-        let keyPair = ed25519.MakeKeypair(seed);
-        let privateKey = keyPair.privateKey;
+        let keyPair = nacl.sign.keyPair()
+        let privateKey = keyPair.secretKey;
         let publicKey = keyPair.publicKey;
         let sharedSecret = that.srp.computeK();
 
@@ -130,8 +130,8 @@ export class Pairing {
           Buffer.from("Pair-Setup-Controller-Sign-Info"),
           32
         );
-        let deviceInfo = Buffer.concat([deviceHash, Buffer.from(that.device.pairingId), publicKey]);
-        let deviceSignature = ed25519.Sign(deviceInfo, privateKey);
+        let deviceInfo = Buffer.concat([deviceHash, Buffer.from(that.device.pairingId), Buffer.from(publicKey)]);
+        let deviceSignature = nacl.sign(deviceInfo, privateKey);
         let encryptionKey = enc.HKDF(
           "sha512",
           Buffer.from("Pair-Setup-Encrypt-Salt"),

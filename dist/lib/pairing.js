@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const srp = require("fast-srp-hap");
 const crypto = require("crypto");
-const ed25519 = require("ed25519");
+const nacl = require("tweetnacl");
 const credentials_1 = require("./credentials");
 const message_1 = require("./message");
 const tlv_1 = require("./util/tlv");
@@ -81,13 +81,13 @@ class Pairing {
             // console.log("DEBUG: Device Proof=" + that.deviceProof.toString('hex'));
             that.srp.checkM2(that.deviceProof);
             let seed = crypto.randomBytes(32);
-            let keyPair = ed25519.MakeKeypair(seed);
-            let privateKey = keyPair.privateKey;
+            let keyPair = nacl.sign.keyPair();
+            let privateKey = keyPair.secretKey;
             let publicKey = keyPair.publicKey;
             let sharedSecret = that.srp.computeK();
             let deviceHash = encryption_1.default.HKDF("sha512", Buffer.from("Pair-Setup-Controller-Sign-Salt"), sharedSecret, Buffer.from("Pair-Setup-Controller-Sign-Info"), 32);
-            let deviceInfo = Buffer.concat([deviceHash, Buffer.from(that.device.pairingId), publicKey]);
-            let deviceSignature = ed25519.Sign(deviceInfo, privateKey);
+            let deviceInfo = Buffer.concat([deviceHash, Buffer.from(that.device.pairingId), Buffer.from(publicKey)]);
+            let deviceSignature = nacl.sign(deviceInfo, privateKey);
             let encryptionKey = encryption_1.default.HKDF("sha512", Buffer.from("Pair-Setup-Encrypt-Salt"), sharedSecret, Buffer.from("Pair-Setup-Encrypt-Info"), 32);
             let tlvData = tlv_1.default.encode(tlv_1.default.Tag.Username, Buffer.from(that.device.pairingId), tlv_1.default.Tag.PublicKey, publicKey, tlv_1.default.Tag.Signature, deviceSignature);
             let encryptedTLV = Buffer.concat(encryption_1.default.encryptAndSeal(tlvData, null, Buffer.from('PS-Msg05'), encryptionKey));

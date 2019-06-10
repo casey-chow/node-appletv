@@ -1,6 +1,6 @@
 import { load } from 'protobufjs';
 import * as path from 'path';
-import * as ed25519 from 'ed25519';
+import * as nacl from 'tweetnacl';
 import * as crypto from 'crypto';
 import * as curve25519 from 'curve25519-n';
 
@@ -68,13 +68,13 @@ export class Verifier {
         }
 
         let deviceInfo = Buffer.concat([sessionPublicKey, Buffer.from(identifier), verifyPublic]);
-        if (!ed25519.Verify(deviceInfo, signature, that.device.credentials.publicKey)) {
+        if (!nacl.sign.detached.verify(deviceInfo, signature, that.device.credentials.publicKey)) {
           throw new Error("Signature verification failed");
         }
 
         let material = Buffer.concat([verifyPublic, Buffer.from(that.device.credentials.pairingId), sessionPublicKey]);
-        let keyPair = ed25519.MakeKeypair(that.device.credentials.encryptionKey);
-        let signed = ed25519.Sign(material, keyPair);
+        let keyPair = nacl.sign.keyPair.fromSecretKey(that.device.credentials.encryptionKey);
+        let signed = nacl.sign(material, keyPair.secretKey);
         let plainTLV = tlv.encode(
           tlv.Tag.Username, Buffer.from(that.device.credentials.pairingId),
           tlv.Tag.Signature, signed

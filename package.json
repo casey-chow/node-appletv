@@ -31,7 +31,6 @@
     "camelcase": "5.0.0",
     "caporal": "1.1.0",
     "curve25519-n": "1.5.0",
-    "ed25519": "0.0.4",
     "fast-srp-hap": "1.0.1",
     "inquirer": "6.2.2",
     "mdns": "2.4.0",
@@ -39,6 +38,7 @@
     "protobufjs": "6.8.8",
     "snake-case": "2.1.0",
     "sodium": "3.0.2",
+    "tweetnacl": "^1.0.1",
     "uuid": "3.3.2",
     "varint": "5.0.0"
   },
